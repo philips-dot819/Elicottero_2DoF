@@ -1,7 +1,7 @@
 % =========================================================================
 % PARAMETRI NOMINALI DELL'ELICOTTERO 2-DoF
 % Corso di Identificazione, Stima e Controllo Robusto (2026)
-% Modulo di Identificazione e Stimaaa
+% Modulo di Identificazione e Stima
 % =========================================================================
 
 clear; clc;
