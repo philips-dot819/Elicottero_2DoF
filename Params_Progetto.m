@@ -1,0 +1,57 @@
+% =========================================================================
+% PARAMETRI NOMINALI DELL'ELICOTTERO 2-DoF
+% Corso di Identificazione, Stima e Controllo Robusto (2026)
+% Modulo di Identificazione e Stimaaa
+% =========================================================================
+
+clear; clc;
+
+%% 1. Parametri Strutturali e Geometrici (Tabella 1)
+J_alpha = 0.012;    % Inerzia di pitch [kg*m^2] (Tabella 1)
+J_y     = 0.00023;  % Componente inerzia di yaw Y [kg*m^2] (Tabella 1)
+J_z     = 0.00364;  % Componente inerzia di yaw Z [kg*m^2] (Tabella 1)
+I_b     = 0.00023;  % Inerzia della base [kg*m^2] (Tabella 1)
+m       = 0.2;      % Massa dell'elicottero [kg] (Tabella 1)
+l       = 0.2;      % Lunghezza del braccio [m] (Tabella 1)
+g       = 9.81;     % Accelerazione di gravità [m/s^2] (Tabella 1)
+
+%% 2. Coefficienti di Attrito (Tabella 1)
+c_alpha = 0.01;     % Coefficiente d'attrito viscoso pitch [N*m*s/rad] (Tabella 1)
+c_beta  = 0.01;     % Coefficiente d'attrito viscoso yaw [N*m*s/rad] (Tabella 1)
+
+%% 3. Coefficienti Aerodinamici e Cross-Thrust (Tabella 1)
+eps_p   = 0.1;      % Effetto cross-thrust su pitch (Tabella 1)
+eps_y   = 0.1;      % Effetto cross-thrust su yaw (Tabella 1)
+
+%% 4. Frequenze di Campionamento dei Sensori (Multi-rate Asincrono)
+% Configurazione dei sample time per i blocchi Simulink dei sensori
+Ts_Girosc    = 1 / 104;  % Passo IMU (~9.6 ms, basato su specifiche LSM6DSOX)
+Ts_Altitude  = 1 / 30;   % Passo sensore di distanza (33.3 ms, VL53L1X in Short Mode)
+Ts_Acceler   = 1 / 80;    
+
+%% 5. Parametri sensore ultrasuoni per alpha
+% Sensore ultrasuoni montato sotto il muso dell'elicottero.
+% Il sensore misura la distanza verticale dal tavolo.
+%
+% Se alpha aumenta, il muso si alza e la distanza dal tavolo aumenta.
+% La misura NON è alpha direttamente, ma una distanza:
+%
+% y_alpha = h0 + l_s_alpha * sin(alpha) + rumore
+
+l_s_alpha = l;              % [m] distanza sensore dal perno lungo il braccio
+h0 = 0.30;                  % [m] altezza del perno rispetto al tavolo
+
+sigma_alpha_sensor = 0.01;   % 1 cm; % [m] deviazione standard rumore sensore
+
+Ts_ToF_alpha = 1 / 30;      % [s] sample time sensore ultrasuoni, 30 Hz
+
+% Matrice di covarianza del rumore di misura.
+% Per ora abbiamo una sola misura:
+% y = y_alpha
+R_sens = sigma_alpha_sensor^2;
+
+% Alias utile per EKF / Particle Filter
+R_EKF = R_sens;
+R_PF  = R_sens;
+
+disp('=== Parametri nominali caricati nel Workspace con successo ===');
