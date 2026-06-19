@@ -32,18 +32,22 @@ Ts_Acceler   = 1 / 80;
 %% 5. Parametri sensore ultrasuoni per alpha
 % Sensore ultrasuoni montato sotto il muso dell'elicottero.
 % Il sensore misura la distanza verticale dal tavolo.
-%
-% Se alpha aumenta, il muso si alza e la distanza dal tavolo aumenta.
-% La misura NON è alpha direttamente, ma una distanza:
-%
-% y_alpha = h0 + l_s_alpha * sin(alpha) + rumore
 
-l_s_alpha = l;              % [m] distanza sensore dal perno lungo il braccio
+
 h0 = 0.30;                  % [m] altezza del perno rispetto al tavolo
 
 sigma_alpha_sensor = 0.01;   % 1 cm; % [m] deviazione standard rumore sensore
 
 Ts_ToF_alpha = 1 / 30;      % [s] sample time sensore ultrasuoni, 30 Hz
+
+%% Parametri Vicon telecamera
+
+% sensore posizionato sopra al perno che ricava la misura x e y della coda
+% dell'elicottero
+
+sigma_cam_sensor = 0.002;
+Ts_Tof_cam       = 1/45;
+
 
 % Matrice di covarianza del rumore di misura.
 % Per ora abbiamo una sola misura:
