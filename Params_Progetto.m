@@ -68,14 +68,14 @@ R_EKF = diag([
     ]);
 
 %% Parametri EKF
-Ts_EKF = 1/104;  % oppure scegliete il rate principale del filtro
+Ts_EKF = 1/104;  % oppure scegliamo il rate principale del filtro
 
 x0_EKF = [0; 0; 0; 0];   % [alpha; d_alpha; beta; d_beta]
 
 P0_EKF = diag([
-    0.2^2
     1^2
-    0.2^2
+    1^2
+    1^2
     1^2
     ]);
 
