@@ -27,7 +27,8 @@ eps_y   = 0.1;      % Effetto cross-thrust su yaw (Tabella 1)
 % Configurazione dei sample time per i blocchi Simulink dei sensori
 Ts_Girosc    = 1 / 104;  % Passo IMU (~9.6 ms, basato su specifiche LSM6DSOX)
 Ts_Altitude  = 1 / 30;   % Passo sensore di distanza (33.3 ms, VL53L1X in Short Mode)
-Ts_Acceler   = 1 / 80;    
+Ts_Acceler   = 1 / 80;   
+
 
 %% 5. Parametri sensore ultrasuoni per alpha
 % Sensore ultrasuoni montato sotto il muso dell'elicottero.
@@ -45,7 +46,7 @@ Ts_ToF_alpha = 1 / 30;      % [s] sample time sensore ultrasuoni, 30 Hz
 % sensore posizionato sopra al perno che ricava la misura x e y della coda
 % dell'elicottero
 
-sigma_cam_sensor = 0.005;
+sigma_cam_sensor = 0.002;
 Ts_Tof_cam       = 1/45;
 
 %% Parametri per inizializzare il filtro a particelle
@@ -73,7 +74,7 @@ R_sens = [sigma_alpha_sensor^2       0                    0;...
                  0          sigma_cam_sensor^2          0;...
                  0                0                 sigma_cam_sensor^2];
 
-%% Matrice di covarianza del rumore di processo
+%% Matrice di covarianza del rumore di processo PARTICLE
 
 % Definisci le deviazioni standard (sigma) attese per ogni step dt
 sigma_alpha = 0.5 * (pi/180); % Incertezza di 0.5 gradi a step
@@ -84,12 +85,44 @@ sigma_d_beta  = 0.1;
 % Costruisci la matrice diagonale Q
 Q_process = diag([sigma_alpha^2, sigma_beta^2, sigma_d_alpha^2, sigma_d_beta^2]);
 
-%% Parametri resampling
+%% Parametri resampling PARTICLE
 
 Resampling_th = 0.5;
 
-% Alias utile per EKF / Particle Filter
-R_EKF = R_sens;
-R_PF  = R_sens;
+%%#### 20/06 ####
+
+%% Accelerometro pitch
+sigma_acc_sensor = 0.05;   % [m/s^2],rumore acc, valore iniziale da tarare
+
+
+%questi valori poi i tarano l'ho fatto per creare una struttura logica
+%delle cose da fare
+
+%% Covarianza misure EKF
+R_EKF = diag([
+    sigma_cam_sensor^2
+    sigma_cam_sensor^2
+    sigma_acc_sensor^2
+    ]);
+
+%% Parametri EKF
+Ts_EKF = 1/104;  % oppure scegliete il rate principale del filtro
+
+x0_EKF = [0; 0; 0; 0];   % [alpha; d_alpha; beta; d_beta]
+
+P0_EKF = diag([
+    0.2^2
+    1^2
+    0.2^2
+    1^2
+    ]);
+
+Q_EKF = diag([
+    1e-5
+    1e-3
+    1e-5
+    1e-3
+    ]);
+
 
 disp('=== Parametri nominali caricati nel Workspace con successo ===');
