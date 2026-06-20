@@ -93,7 +93,7 @@ Resampling_th = 0.5;
 
 %% Accelerometro pitch
 sigma_acc_sensor = 0.05;   % [m/s^2],rumore acc, valore iniziale da tarare
-
+Ts_acceler = 1/1344;
 
 %questi valori poi i tarano l'ho fatto per creare una struttura logica
 %delle cose da fare
