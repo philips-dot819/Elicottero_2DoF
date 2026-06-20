@@ -46,7 +46,7 @@ Ts_ToF_alpha = 1 / 30;      % [s] sample time sensore ultrasuoni, 30 Hz
 % sensore posizionato sopra al perno che ricava la misura x e y della coda
 % dell'elicottero
 
-sigma_cam_sensor = 0.002;
+sigma_cam_sensor = 0.005;
 Ts_Tof_cam       = 1/45;
 
 %% Parametri per inizializzare il filtro a particelle
@@ -103,26 +103,25 @@ R_EKF = diag([
     sigma_cam_sensor^2
     sigma_cam_sensor^2
     sigma_acc_sensor^2
-    ]);
+]);
 
 %% Parametri EKF
-Ts_EKF = 1/104;  % oppure scegliete il rate principale del filtro
+Ts_EKF = 1/104;  % oppure scegliamo il rate principale del filtro
 
 x0_EKF = [0; 0; 0; 0];   % [alpha; d_alpha; beta; d_beta]
 
 P0_EKF = diag([
-    0.2^2
     1^2
-    0.2^2
+    1^2
+    1^2
     1^2
     ]);
 
 Q_EKF = diag([
     1e-5
     1e-3
-    1e-5
-    1e-3
-    ]);
-
+    2e-6
+    2e-5
+]);
 
 disp('=== Parametri nominali caricati nel Workspace con successo ===');
