@@ -67,6 +67,18 @@ N = 1000;
 W0 = ones(1, N)/N;
 dt = 1 / fmax;
 
+% Per gli angoli (alpha, beta): sparpagliamo i cloni di circa 0.5 gradi
+sigma_jitter_alpha = deg2rad(0.5); 
+sigma_jitter_beta  = deg2rad(0.5);
+
+% Per le velocità (d_alpha, d_beta): sparpagliamo di 0.05 rad/s
+sigma_jitter_d_alpha = 0.05; 
+sigma_jitter_d_beta  = 0.05;
+
+% 2. Crea la matrice di covarianza Q_jitter (4x4 diagonale)
+Q_jitter = diag([sigma_jitter_alpha^2, sigma_jitter_d_alpha^2, ...
+                 sigma_jitter_beta^2,  sigma_jitter_d_beta^2]);
+
 % probabilità a priori per lo stato iniziale
 % definita come gaussiana per ogni variabile di stato, media nulla.
 var_alpha =  (2 * pi/180)^2;
@@ -83,8 +95,8 @@ X0(4, :) = sqrt(var_dot) * randn(1, N);    % Beta_dot
 % R_sens =  [sigma_cam_sensor^2       0                    0;...
 %                  0          sigma_cam_sensor^2          0;...
 %                  0                0                 sigma_acc_sensor^2];
-R_sens =  [ 0.05^2       0                    0;...
-            0          0.05^2          0;...
+R_sens =  [ 0.005^2           0                    0;...
+            0             0.005^2                  0;...
             0                0                 0.5^2];
 
 Acc_Period = fmax / f_Acceler;  
@@ -95,11 +107,11 @@ XY_Period  = fmax / f_cam;
 sigma_alpha = 0.5 * (pi/180); % Incertezza di 0.5 gradi a step
 sigma_beta  = 0.05 * (pi/180); % Incertezza di 0.5 gradi a step
 sigma_d_alpha = 0.5;        % Incertezza di 0.1 rad/s a step sulle velocità
-sigma_d_beta  = 0.3;
+sigma_d_beta  = 0.8;
 
 % Costruisci la matrice diagonale Q
 % Q_process = diag([sigma_alpha^2, sigma_d_alpha^2, sigma_beta^2, sigma_d_beta^2]);
-Q_process = diag([1e-6, 1e-4, 1e-6, 1e-4]);
+Q_process = diag([1e-6, 1e-4, 1e-6, 5e-1]);
 
 % Parametri resampling PARTICLE
 Resampling_th = 0.7;
