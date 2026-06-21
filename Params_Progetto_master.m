@@ -24,15 +24,15 @@ eps_y   = 0.1;      % Effetto cross-thrust su yaw (Tabella 1)
 
 %% 4. Parametri Sensori Attivi
 % Accelerometro pitch
-f_Acceler        = 80;
-Ts_Acceler       = 1 / 80;   
-sigma_acc_sensor = 0.05;   % [m/s^2],rumore acc, valore iniziale da tarare
+f_Acceler        = 100;
+Ts_Acceler       = 1 / 100;   
+sigma_acc_sensor = 0.1;   % [m/s^2],rumore acc, valore iniziale da tarare
 
 % Parametri Vicon telecamera
 % sensore posizionato sopra al perno che ricava la misura x e y della coda
 % dell'elicottero
-f_cam            = 120;
-Ts_Tof_cam       = 1/120;
+f_cam            = 50; 
+Ts_Tof_cam       = 1/f_cam;
 sigma_cam_sensor = 0.005;
 
 fmax = lcm(f_Acceler, f_cam);
@@ -80,22 +80,26 @@ X0(3, :) = sqrt(var_beta) * randn(1, N);   % Beta iniziali
 X0(4, :) = sqrt(var_dot) * randn(1, N);    % Beta_dot
 
 % Matrice di covarianza del rumore di misura, usata nel particle
-R_sens = [sigma_cam_sensor^2       0                    0;...
-                 0          sigma_cam_sensor^2          0;...
-                 0                0                 sigma_acc_sensor^2];
+% R_sens =  [sigma_cam_sensor^2       0                    0;...
+%                  0          sigma_cam_sensor^2          0;...
+%                  0                0                 sigma_acc_sensor^2];
+R_sens =  [ 0.05^2       0                    0;...
+            0          0.05^2          0;...
+            0                0                 0.5^2];
 
 Acc_Period = fmax / f_Acceler;  
 XY_Period  = fmax / f_cam;      
 
 % Matrice di covarianza del rumore di processo PARTICLE
 % Definisci le deviazioni standard (sigma) attese per ogni step dt
-sigma_alpha = 0.05 * (pi/180); % Incertezza di 0.5 gradi a step
+sigma_alpha = 0.5 * (pi/180); % Incertezza di 0.5 gradi a step
 sigma_beta  = 0.05 * (pi/180); % Incertezza di 0.5 gradi a step
-sigma_d_alpha = 0.01;        % Incertezza di 0.1 rad/s a step sulle velocità
-sigma_d_beta  = 0.01;
+sigma_d_alpha = 0.5;        % Incertezza di 0.1 rad/s a step sulle velocità
+sigma_d_beta  = 0.3;
 
 % Costruisci la matrice diagonale Q
-Q_process = diag([sigma_alpha^2, sigma_beta^2, sigma_d_alpha^2, sigma_d_beta^2]);
+% Q_process = diag([sigma_alpha^2, sigma_d_alpha^2, sigma_beta^2, sigma_d_beta^2]);
+Q_process = diag([1e-6, 1e-4, 1e-6, 1e-4]);
 
 % Parametri resampling PARTICLE
 Resampling_th = 0.7;
