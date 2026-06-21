@@ -75,17 +75,17 @@ var_dot   =  1;
 
 X0 = zeros(4, N);
 X0(1, :) = sqrt(var_alpha) * randn(1, N);  % Alpha iniziali
-X0(2, :) = sqrt(var_beta) * randn(1, N);   % Beta iniziali
-X0(3, :) = sqrt(var_dot) * randn(1, N);    % Alpha_dot
+X0(2, :) = sqrt(var_dot) * randn(1, N);    % Alpha_dot
+X0(3, :) = sqrt(var_beta) * randn(1, N);   % Beta iniziali
 X0(4, :) = sqrt(var_dot) * randn(1, N);    % Beta_dot
 
 % Matrice di covarianza del rumore di misura, usata nel particle
-R_sens = [sigma_alpha_sensor^2       0                    0;...
+R_sens = [sigma_cam_sensor^2       0                    0;...
                  0          sigma_cam_sensor^2          0;...
-                 0                0                 sigma_cam_sensor^2];
+                 0                0                 sigma_acc_sensor^2];
 
-Acc_Period = f_max / f_Acceler;  
-XY_Period  = f_max / f_cam;      
+Acc_Period = fmax / f_Acceler;  
+XY_Period  = fmax / f_cam;      
 
 % Matrice di covarianza del rumore di processo PARTICLE
 % Definisci le deviazioni standard (sigma) attese per ogni step dt
