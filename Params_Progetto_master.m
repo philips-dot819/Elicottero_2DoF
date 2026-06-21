@@ -63,7 +63,7 @@ R_EKF = diag([
 ]);
 
 %% 6. Parametri Filtro a Particelle (Particle)
-N = 10000;
+N = 1000;
 W0 = ones(1, N)/N;
 dt = 1 / fmax;
 
@@ -89,10 +89,10 @@ XY_Period  = fmax / f_cam;
 
 % Matrice di covarianza del rumore di processo PARTICLE
 % Definisci le deviazioni standard (sigma) attese per ogni step dt
-sigma_alpha = 0.5 * (pi/180); % Incertezza di 0.5 gradi a step
-sigma_beta  = 0.5 * (pi/180); % Incertezza di 0.5 gradi a step
-sigma_d_alpha = 0.2;        % Incertezza di 0.1 rad/s a step sulle velocità
-sigma_d_beta  = 0.005;
+sigma_alpha = 0.05 * (pi/180); % Incertezza di 0.5 gradi a step
+sigma_beta  = 0.05 * (pi/180); % Incertezza di 0.5 gradi a step
+sigma_d_alpha = 0.01;        % Incertezza di 0.1 rad/s a step sulle velocità
+sigma_d_beta  = 0.01;
 
 % Costruisci la matrice diagonale Q
 Q_process = diag([sigma_alpha^2, sigma_beta^2, sigma_d_alpha^2, sigma_d_beta^2]);
