@@ -111,7 +111,7 @@ sigma_d_beta  = 0.8;
 
 % Costruisci la matrice diagonale Q
 % Q_process = diag([sigma_alpha^2, sigma_d_alpha^2, sigma_beta^2, sigma_d_beta^2]);
-Q_process = diag([1e-6, 1e-4, 1e-6, 5e-1]);
+Q_process = diag([1e-6, 1e-3, 1e-6, 1e-3]);
 
 % Parametri resampling PARTICLE
 Resampling_th = 0.7;
