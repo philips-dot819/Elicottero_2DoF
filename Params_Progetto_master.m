@@ -3,7 +3,6 @@
 % Corso di Identificazione, Stima e Controllo Robusto (2026)
 % Modulo di Identificazione e Stima
 % =========================================================================
-
 clear; clc;
 
 %% 1. Parametri Strutturali e Geometrici (Tabella 1)
@@ -23,91 +22,23 @@ c_beta  = 0.01;     % Coefficiente d'attrito viscoso yaw [N*m*s/rad] (Tabella 1)
 eps_p   = 0.1;      % Effetto cross-thrust su pitch (Tabella 1)
 eps_y   = 0.1;      % Effetto cross-thrust su yaw (Tabella 1)
 
-%% 4. Frequenze di Campionamento dei Sensori (Multi-rate Asincrono)
-% Configurazione dei sample time per i blocchi Simulink dei sensori
-Ts_Girosc    = 1 / 104;  % Passo IMU (~9.6 ms, basato su specifiche LSM6DSOX)
-Ts_Altitude  = 1 / 30;   % Passo sensore di distanza (33.3 ms, VL53L1X in Short Mode)
-Ts_Acceler   = 1 / 80;   
+%% 4. Parametri Sensori Attivi
+% Accelerometro pitch
+f_Acceler        = 80;
+Ts_Acceler       = 1 / 80;   
+sigma_acc_sensor = 0.05;   % [m/s^2],rumore acc, valore iniziale da tarare
 
-
-%% 5. Parametri sensore ultrasuoni per alpha
-% Sensore ultrasuoni montato sotto il muso dell'elicottero.
-% Il sensore misura la distanza verticale dal tavolo.
-
-
-h0 = 0.30;                  % [m] altezza del perno rispetto al tavolo
-
-sigma_alpha_sensor = 0.01;   % 1 cm; % [m] deviazione standard rumore sensore
-
-Ts_ToF_alpha = 1 / 30;      % [s] sample time sensore ultrasuoni, 30 Hz
-
-%% Parametri Vicon telecamera
-
+% Parametri Vicon telecamera
 % sensore posizionato sopra al perno che ricava la misura x e y della coda
 % dell'elicottero
-
+f_cam            = 120;
+Ts_Tof_cam       = 1/120;
 sigma_cam_sensor = 0.005;
-Ts_Tof_cam       = 1/45;
 
-%% Parametri per inizializzare il filtro a particelle
+fmax = lcm(f_Acceler, f_cam);
 
-N = 10000;
-W0 = ones(1, N)/N;
-dt = 1/90;
-
-% probabilità a priori per lo stato iniziale
-% definita come gaussiana per ogni variabile di stato, media nulla.
-
-var_alpha =  (2 * pi/180)^2;
-var_beta  =  (2 * pi/180)^2;
-var_dot   =  1;
-
-X0 = zeros(4, N);
-X0(1, :) = sqrt(var_alpha) * randn(1, N);  % Alpha iniziali
-X0(2, :) = sqrt(var_beta) * randn(1, N);   % Beta iniziali
-X0(3, :) = sqrt(var_dot) * randn(1, N);    % Alpha_dot
-X0(4, :) = sqrt(var_dot) * randn(1, N);    % Beta_dot
-
-%% Matrice di covarianza del rumore di misura.
-
-R_sens = [sigma_alpha_sensor^2       0                    0;...
-                 0          sigma_cam_sensor^2          0;...
-                 0                0                 sigma_cam_sensor^2];
-
-%% Matrice di covarianza del rumore di processo PARTICLE
-
-% Definisci le deviazioni standard (sigma) attese per ogni step dt
-sigma_alpha = 0.5 * (pi/180); % Incertezza di 0.5 gradi a step
-sigma_beta  = 0.5 * (pi/180); % Incertezza di 0.5 gradi a step
-sigma_d_alpha = 0.1;        % Incertezza di 0.1 rad/s a step sulle velocità
-sigma_d_beta  = 0.1;
-
-% Costruisci la matrice diagonale Q
-Q_process = diag([sigma_alpha^2, sigma_beta^2, sigma_d_alpha^2, sigma_d_beta^2]);
-
-%% Parametri resampling PARTICLE
-
-Resampling_th = 0.5;
-
-%%#### 20/06 ####
-
-%% Accelerometro pitch
-sigma_acc_sensor = 0.05;   % [m/s^2],rumore acc, valore iniziale da tarare
-% Ts_acceler = 1/1344; abbiamo gia Ts_Acceler ;
-
-%questi valori poi i tarano l'ho fatto per creare una struttura logica
-%delle cose da fare
-
-%% Covarianza misure EKF
-R_EKF = diag([
-    sigma_cam_sensor^2
-    sigma_cam_sensor^2
-    sigma_acc_sensor^2
-]);
-
-%% Parametri EKF
+%% 5. Parametri EKF
 Ts_EKF = 1/104;  % oppure scegliamo il rate principale del filtro
-
 x0_EKF = [0; 0; 0; 0];   % [alpha; d_alpha; beta; d_beta]
 
 P0_EKF = diag([
@@ -124,4 +55,67 @@ Q_EKF = diag([
     2e-5
 ]);
 
+% Covarianza misure EKF
+R_EKF = diag([
+    sigma_cam_sensor^2
+    sigma_cam_sensor^2
+    sigma_acc_sensor^2
+]);
+
+%% 6. Parametri Filtro a Particelle (Particle)
+N = 10000;
+W0 = ones(1, N)/N;
+dt = 1 / fmax;
+
+% probabilità a priori per lo stato iniziale
+% definita come gaussiana per ogni variabile di stato, media nulla.
+var_alpha =  (2 * pi/180)^2;
+var_beta  =  (2 * pi/180)^2;
+var_dot   =  1;
+
+X0 = zeros(4, N);
+X0(1, :) = sqrt(var_alpha) * randn(1, N);  % Alpha iniziali
+X0(2, :) = sqrt(var_beta) * randn(1, N);   % Beta iniziali
+X0(3, :) = sqrt(var_dot) * randn(1, N);    % Alpha_dot
+X0(4, :) = sqrt(var_dot) * randn(1, N);    % Beta_dot
+
+% Matrice di covarianza del rumore di misura, usata nel particle
+R_sens = [sigma_alpha_sensor^2       0                    0;...
+                 0          sigma_cam_sensor^2          0;...
+                 0                0                 sigma_cam_sensor^2];
+
+Acc_Period = f_max / f_Acceler;  
+XY_Period  = f_max / f_cam;      
+
+% Matrice di covarianza del rumore di processo PARTICLE
+% Definisci le deviazioni standard (sigma) attese per ogni step dt
+sigma_alpha = 0.5 * (pi/180); % Incertezza di 0.5 gradi a step
+sigma_beta  = 0.5 * (pi/180); % Incertezza di 0.5 gradi a step
+sigma_d_alpha = 0.1;        % Incertezza di 0.1 rad/s a step sulle velocità
+sigma_d_beta  = 0.1;
+
+% Costruisci la matrice diagonale Q
+Q_process = diag([sigma_alpha^2, sigma_beta^2, sigma_d_alpha^2, sigma_d_beta^2]);
+
+% Parametri resampling PARTICLE
+Resampling_th = 0.5;
+
 disp('=== Parametri nominali caricati nel Workspace con successo ===');
+
+%% =========================================================================
+%% 7. SENSORI NON UTILIZZATI E OBSOLETI
+%% =========================================================================
+
+% Configurazione dei sample time per i blocchi Simulink dei sensori
+% Ts_Girosc    = 1 / 104;  % Passo IMU (~9.6 ms, basato su specifiche LSM6DSOX)
+% Ts_Altitude  = 1 / 30;   % Passo sensore di distanza (33.3 ms, VL53L1X in Short Mode)
+
+% Parametri sensore ultrasuoni per alpha
+% % Sensore ultrasuoni montato sotto il muso dell'elicottero.
+% % Il sensore misura la distanza verticale dal tavolo.
+% 
+% h0 = 0.30;                  % [m] altezza del perno rispetto al tavolo
+% 
+% sigma_alpha_sensor = 0.01;   % 1 cm; % [m] deviazione standard rumore sensore
+% 
+% Ts_ToF_alpha = 1 / 30;      % [s] sample time sensore ultrasuoni, 30 Hz
