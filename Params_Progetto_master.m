@@ -91,14 +91,14 @@ XY_Period  = fmax / f_cam;
 % Definisci le deviazioni standard (sigma) attese per ogni step dt
 sigma_alpha = 0.5 * (pi/180); % Incertezza di 0.5 gradi a step
 sigma_beta  = 0.5 * (pi/180); % Incertezza di 0.5 gradi a step
-sigma_d_alpha = 0.1;        % Incertezza di 0.1 rad/s a step sulle velocità
-sigma_d_beta  = 0.1;
+sigma_d_alpha = 0.2;        % Incertezza di 0.1 rad/s a step sulle velocità
+sigma_d_beta  = 0.005;
 
 % Costruisci la matrice diagonale Q
 Q_process = diag([sigma_alpha^2, sigma_beta^2, sigma_d_alpha^2, sigma_d_beta^2]);
 
 % Parametri resampling PARTICLE
-Resampling_th = 0.5;
+Resampling_th = 0.7;
 
 disp('=== Parametri nominali caricati nel Workspace con successo ===');
 
