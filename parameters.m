@@ -103,6 +103,7 @@ resampling_th_PF = 0.7;       % Soglia per attivare il resampling (N_eff < sogli
 
 % Matrice di Covarianza del Rumore di Processo
 % Q_PF = diag([1e-6, 1e-4, 1e-6, 1e-4]);
+% Q_PF = diag([1e-6, 1e-3, 1e-6, 1e-3]);
 Q_PF = diag([1e-6, 1e-2, 1e-6, 1e-2]);
 
 % Matrice di Covarianza del Rumore di Misura
