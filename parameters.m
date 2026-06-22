@@ -46,8 +46,8 @@ eps_y_unc = uncert(eps_y, unc_eps);   % Coefficiente di cross-thrust su yaw ince
 g_unc = g;                            % Accelerazione di gravità (invariata) [m/s^2]
 
 % Vettore parametri incerti
-% helicopter_params_unc = [J_alpha; J_y; J_z; I_b; m; l; c_alpha; c_beta; eps_p; eps_y; g];
-helicopter_params_unc = [J_alpha_unc; J_y_unc; J_z_unc; I_b_unc; m_unc; l_unc; c_alpha_unc; c_beta_unc; eps_p_unc; eps_y_unc; g_unc];
+helicopter_params_unc = [J_alpha; J_y; J_z; I_b; m; l; c_alpha; c_beta; eps_p; eps_y; g];
+%helicopter_params_unc = [J_alpha_unc; J_y_unc; J_z_unc; I_b_unc; m_unc; l_unc; c_alpha_unc; c_beta_unc; eps_p_unc; eps_y_unc; g_unc];
 
 %% Parametri Sensori
 % Telecamera
@@ -69,9 +69,9 @@ amp_outlier_acc = 10.0; % Ampiezza massima outlier accelerometro [m/s^2]
 dt_EKF = 0.001; % Tempo di campionamento del filtro [s]
 
 % Matrice di Covarianza del Rumore di Processo
-% Q_EKF = diag([1e-7, 1e-5, 1e-7, 1e-5]); % okay per modello perfetto e std_dev_cam = 0.5 e std_dev_acc = 1.0
+Q_EKF = diag([1e-7, 1e-5, 1e-7, 1e-5]); % okay per modello perfetto e std_dev_cam = 0.5 e std_dev_acc = 1.0
 % Q_EKF = diag([1e-6, 1e-3, 1e-6, 1e-3]); % molto buono (con std_dev_camm = 0.05, std_dev_accc = 0.5); troppo rumore forse se ho qualche disturbo (al momento ho solo noise in ingresso ed è top)?
-Q_EKF = diag([1e-6, 1e-4, 1e-6, 1e-4]); % ottimo (con std_dev_camm = 0.05, std_dev_accc = 0.5) ma molto buono anche con std_dev_camm = 0.005, std_dev_accc = 0.1
+% Q_EKF = diag([1e-6, 1e-4, 1e-6, 1e-4]); % ottimo (con std_dev_camm = 0.05, std_dev_accc = 0.5) ma molto buono anche con std_dev_camm = 0.005, std_dev_accc = 0.1
 % Q_EKF = diag([1e-5, 1e-3, 1e-5, 1e-3]); % un po' troppo rumore (con std_dev_camm = 0.05, std_dev_accc = 0.5)
 
 % Matrice di Covarianza del Rumore di Misura
@@ -85,8 +85,8 @@ threshold_maha = 4;
 % Condizioni Iniziali
 x0_EKF = [0; 0; 0; 0]; % Stato iniziale ipotizzato nel filtro
 % x0_EKF = [pi/2; 0.2; pi/4; -0.15]; % Stato iniziale ipotizzato nel filtro
-P0_EKF = diag([1, 1, 1, 1]); % Matrice di covarianza iniziale (incertezza alta)
-% P0_EKF = diag([1e-2, 1e-2, 1e-2, 1e-2]); % Matrice di covarianza iniziale (incertezza bassa)
+% P0_EKF = diag([1, 1, 1, 1]); % Matrice di covarianza iniziale (incertezza alta)
+P0_EKF = diag([1e-2, 1e-2, 1e-2, 1e-2]); % Matrice di covarianza iniziale (incertezza bassa)
 % P0_EKF = diag([10, 10, 10, 10]); % Matrice di covarianza iniziale (incertezza altissima)
 y_meas0_EKF = [0; 0; 0]; % Memoria iniziale dei sensori
 
@@ -102,23 +102,23 @@ W0_PF = ones(1, N_PF) / N_PF; % Pesi iniziali uniformi e normalizzati
 resampling_th_PF = 0.7;       % Soglia per attivare il resampling (N_eff < soglia * N)
 
 % Matrice di Covarianza del Rumore di Processo
-% Q_PF = diag([1e-6, 1e-4, 1e-6, 1e-4]);
+Q_PF = diag([1e-6, 1e-4, 1e-6, 1e-4]);
 % Q_PF = diag([1e-6, 1e-3, 1e-6, 1e-3]);
-Q_PF = diag([1e-6, 1e-2, 1e-6, 1e-2]);
+% Q_PF = diag([1e-6, 1e-2, 1e-6, 1e-2]);
 
 % Matrice di Covarianza del Rumore di Misura
 R_PF = diag([std_dev_cam^2, std_dev_cam^2, std_dev_acc^2]);
 
 % Condizioni Iniziali
-var_alpha_PF = (2 * pi/180)^2; % Incertezza iniziale su pitch [rad^2]
-var_beta_PF = (2 * pi/180)^2;  % Incertezza iniziale su yaw [rad^2]
-var_dot_PF = 1;                % Incertezza iniziale sulle velocità [rad^2/s^2]
+var_alpha_PF = ((2 * pi/180)^2)/10; % Incertezza iniziale su pitch [rad^2]
+var_beta_PF = ((2 * pi/180)^2)/10;  % Incertezza iniziale su yaw [rad^2]
+var_dot_PF = (1)/10;                % Incertezza iniziale sulle velocità [rad^2/s^2]
 
 X0_PF = zeros(4, N_PF);
-X0_PF(1, :) = (rand(1, N_PF) - 0.5) * pi;   % Distribuzione iniziale uniformemente per alpha tra -pi/2 e pi/2
-X0_PF(2, :) = (rand(1, N_PF) - 0.5) * 2;    % Distribuzione iniziale uniformemente per alpha_dot tra -1 rad/s e +1 rad/s
-X0_PF(3, :) = (rand(1, N_PF) - 0.5) * 2*pi; % Distribuzione iniziale uniformemente per beta tra -pi e pi
-X0_PF(4, :) = (rand(1, N_PF) - 0.5) * 2;    % Distribuzione iniziale uniformemente per beta_dot tra -1 rad/s e +1 rad/s
+X0_PF(1, :) = (rand(1, N_PF) - 0.5) * pi/2;   % Distribuzione iniziale uniformemente per alpha tra -pi/2 e pi/2
+X0_PF(2, :) = (rand(1, N_PF) - 0.5) * 1/2;    % Distribuzione iniziale uniformemente per alpha_dot tra -1 rad/s e +1 rad/s
+X0_PF(3, :) = (rand(1, N_PF) - 0.5) * pi/2; % Distribuzione iniziale uniformemente per beta tra -pi e pi
+X0_PF(4, :) = (rand(1, N_PF) - 0.5) * 1/4;    % Distribuzione iniziale uniformemente per beta_dot tra -1 rad/s e +1 rad/s
 
 % Parametri per il Roughening (Jittering) post-resampling
 sigma_jitter_alpha_PF = deg2rad(0.5); % [rad]
