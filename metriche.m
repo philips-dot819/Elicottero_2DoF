@@ -192,37 +192,50 @@ end
 %% ------------------------------
 
 parameter_names = [
-    "Condizioni iniziali modello x0"
+    "Seed random fissato"
+    "Seed random"
+    "Parametri fisici plant"
+    "Condizione iniziale reale"
+    "Rumore sensori"
+    "Deviazione standard camera"
+    "Deviazione standard accelerometro"
+    "Outlier"
+    "Probabilita outlier"
+    "Ampiezza outlier camera"
+    "Ampiezza outlier accelerometro"
     "Matrice rumore di processo EKF Q_EKF"
     "Matrice rumore di misura EKF R_EKF"
     "Stato iniziale ipotizzato EKF x0_EKF"
     "Covarianza iniziale EKF P0_EKF"
+    "Soglia Mahalanobis EKF"
     "Numero particelle PF N_PF"
+    "Distribuzione iniziale particelle PF"
     "Particelle iniziali PF X0_PF"
     "Matrice rumore di processo PF Q_PF"
     "Matrice rumore di misura PF R_PF"
+    "Soglia resampling PF"
     "Soglie assestamento tol"
 ];
 
-parameter_values = [
-    getValueIfExists('x0')
-    getValueIfExists('Q_EKF')
-    getValueIfExists('R_EKF')
-    getValueIfExists('x0_EKF')
-    getValueIfExists('P0_EKF')
-    getValueIfExists('N_PF')
-    getValueIfExists('X0_PF')
-    getValueIfExists('Q_PF')
-    getValueIfExists('R_PF')
-    formatValueForReport(tol, 'tol')
-];
-
 parameter_area = [
+    "Configurazione"
+    "Configurazione"
     "Modello"
+    "Modello"
+    "Sensori"
+    "Sensori"
+    "Sensori"
+    "Outlier"
+    "Outlier"
+    "Outlier"
+    "Outlier"
     "EKF"
     "EKF"
     "EKF"
     "EKF"
+    "EKF"
+    "PF"
+    "PF"
     "PF"
     "PF"
     "PF"
@@ -230,11 +243,64 @@ parameter_area = [
     "Metriche"
 ];
 
+parameter_choice = [
+    getValueIfExists('flag_fixed_seed')
+    getValueIfExists('rng_seed')
+    getValueIfExists('plant_param_case')
+    getValueIfExists('x0_case')
+    getValueIfExists('sensor_noise_case')
+    "—"
+    "—"
+    getValueIfExists('flag_use_outliers')
+    "—"
+    "—"
+    "—"
+    getValueIfExists('Q_EKF_case')
+    "—"
+    getValueIfExists('x0_EKF_case')
+    getValueIfExists('P0_EKF_case')
+    "—"
+    getValueIfExists('N_PF_case')
+    getValueIfExists('X0_PF_case')
+    "—"
+    getValueIfExists('Q_PF_case')
+    "—"
+    "—"
+    "—"
+];
+
+parameter_values = [
+    getValueIfExists('flag_fixed_seed')
+    getValueIfExists('rng_seed')
+    getPlantParamDescription()
+    getValueIfExists('x0')
+    getSensorNoiseDescription()
+    getValueIfExists('std_dev_cam')
+    getValueIfExists('std_dev_acc')
+    getOutlierDescription()
+    getValueIfExists('prob_outlier')
+    getValueIfExists('amp_outlier_cam')
+    getValueIfExists('amp_outlier_acc')
+    getValueIfExists('Q_EKF')
+    getValueIfExists('R_EKF')
+    getValueIfExists('x0_EKF')
+    getValueIfExists('P0_EKF')
+    getValueIfExists('threshold_maha')
+    getValueIfExists('N_PF')
+    "-"
+    getValueIfExists('X0_PF')
+    getValueIfExists('Q_PF')
+    getValueIfExists('R_PF')
+    getValueIfExists('resampling_th_PF')
+    formatValueForReport(tol, 'tol')
+];
+
 parameter_table = table( ...
     parameter_names, ...
     parameter_area, ...
+    parameter_choice, ...
     parameter_values, ...
-    'VariableNames', {'Parametro', 'Ambito', 'Valore'} ...
+    'VariableNames', {'Parametro', 'Ambito', 'Scelta', 'Valore'} ...
 );
 
 disp(' ');
@@ -246,8 +312,6 @@ writeTextTable(parameter_table, 'tabella_parametri_stimatori.txt');
 disp(' ');
 disp('Tabella parametri salvata come: tabella_parametri_stimatori.txt');
 disp(' ');
-
-
 %% ------------------------------
 %  7.2 Tabella metriche
 %% ------------------------------
@@ -859,5 +923,98 @@ mantissa = regexprep(mantissa, '0+$', '');
 mantissa = regexprep(mantissa, '\.$', '');
 
 s = mantissa + "e" + string(exponent);
+
+end
+
+
+function description = getSensorNoiseDescription()
+
+if evalin('base', 'exist(''sensor_noise_case'', ''var'')')
+    sensor_case = evalin('base', 'sensor_noise_case');
+else
+    description = "non trovato";
+    return;
+end
+
+switch string(sensor_case)
+
+    case "basso"
+        description = "basso: std_dev_cam = 5e-3 m, std_dev_acc = 1e-1 m/s^2";
+
+    case "nominale"
+        description = "nominale: std_dev_cam = 5e-2 m, std_dev_acc = 5e-1 m/s^2";
+
+    case "alto"
+        description = "alto: std_dev_cam = 1e-1 m, std_dev_acc = 1e0 m/s^2";
+
+    otherwise
+        description = "caso sensori non riconosciuto";
+
+end
+
+end
+
+function description = getOutlierDescription()
+
+if evalin('base', 'exist(''flag_use_outliers'', ''var'')')
+    flag_out = evalin('base', 'flag_use_outliers');
+else
+    description = "non trovato";
+    return;
+end
+
+if flag_out
+    description = "attivi: prob = 1e-2, amp_cam = 1e0 m, amp_acc = 1e1 m/s^2";
+else
+    description = "disattivati: prob = 0, amp_cam = 0, amp_acc = 0";
+end
+
+end
+
+function description = getPFInitialDistributionDescription()
+
+if evalin('base', 'exist(''X0_PF_case'', ''var'')')
+    X0_case = evalin('base', 'X0_PF_case');
+else
+    description = "non trovato";
+    return;
+end
+
+switch string(X0_case)
+
+    case "ampia"
+        description = "ampia: alpha in [-pi/2, pi/2], alpha_dot in [-1,1], beta in [-pi,pi], beta_dot in [-1,1]";
+
+    case "stretta_attorno_x0"
+        description = "stretta attorno a x0: gaussiane su alpha, alpha_dot, beta, beta_dot";
+
+    otherwise
+        description = "caso X0_PF non riconosciuto";
+
+end
+
+end
+
+function description = getPlantParamDescription()
+
+if evalin('base', 'exist(''plant_param_case'', ''var'')')
+    plant_case = evalin('base', 'plant_param_case');
+else
+    description = "non trovato";
+    return;
+end
+
+switch string(plant_case)
+
+    case "nominali"
+        description = "nominali: helicopter_params_unc = helicopter_params";
+
+    case "incerti"
+        description = "incerti: J 5%, m 1%, l 1%, c 7%, eps 7%, g invariata";
+
+    otherwise
+        description = "caso plant non riconosciuto";
+
+end
 
 end
